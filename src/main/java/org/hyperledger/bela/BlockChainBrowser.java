@@ -19,9 +19,11 @@ package org.hyperledger.bela;
 
 import org.hyperledger.besu.datatypes.Address;
 import org.hyperledger.besu.datatypes.Hash;
+import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateArchive;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.Blockchain;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
+import org.hyperledger.besu.ethereum.chain.MutableBlockchain;
 import org.hyperledger.besu.ethereum.core.Block;
 import org.hyperledger.besu.ethereum.mainnet.MainnetBlockHeaderFunctions;
 import org.hyperledger.besu.ethereum.storage.StorageProvider;
@@ -46,17 +48,20 @@ import org.hyperledger.bela.model.BlockResult;
 public class BlockChainBrowser {
 
   private final BonsaiWorldStateKeyValueStorage worldStateStorage;
-  private final Blockchain blockchain;
+  private final MutableBlockchain blockchain;
 //  private final BonsaiWorldStateArchive worldStateArchive;
 
 
   public BlockChainBrowser(
-      final Blockchain blockchain,
+      final MutableBlockchain blockchain,
 //      final BonsaiWorldStateArchive worldStateArchive,
       final BonsaiWorldStateKeyValueStorage worldStateStorage) {
     this.blockchain = blockchain;
 //    this.worldStateArchive = worldStateArchive;
     this.worldStateStorage = worldStateStorage;
+
+    // fixme, hack to rollback lodestar node to a point before the contract was destroyed:
+    blockchain.rewindToBlock(Hash.fromHexString("0x5e25db03841d93cd2cadb7f43dcc3c01dfec77ec3d44b2749791c2b7f46cbb30"));
   }
 
   public static BlockChainBrowser fromProvider(final StorageProvider provider) {
@@ -64,12 +69,18 @@ public class BlockChainBrowser {
         provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN),
         new MainnetBlockHeaderFunctions());
 
+    var genesisBlock = blockchainStorage
+        .getBlockHash(0L)
+        .flatMap(blockchainStorage::getBlockHeader)
+        .flatMap(header -> blockchainStorage.getBlockBody(header.getBlockHash())
+            .map(body -> new Block(header, body))).get();
+
     var blockchain = DefaultBlockchain
-        .create(blockchainStorage,new NoOpMetricsSystem(), 0L);
+        .createMutable(genesisBlock, blockchainStorage,new NoOpMetricsSystem(), 0L);
 
     var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
-//    var worldStateArchive = new BonsaiWorldStateArchive(
-//        provider, blockchain);
+    var worldStateArchive = new BonsaiWorldStateArchive(
+        provider, blockchain);
     return new BlockChainBrowser(blockchain/*, worldStateArchive*/, worldStateStorage);
   }
 
