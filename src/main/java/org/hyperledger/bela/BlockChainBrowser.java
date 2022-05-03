@@ -101,7 +101,7 @@ public class BlockChainBrowser {
         worldStateStorage.getWorldStateRootHash().map(Bytes::toHexString).orElse(null),
         blockchain.getChainHead(),
         worldStateStorage.getCode(null,
-            Hash.hash(Address.fromHexString("0xEcEac5562EAF4B7C07e9E208CfaD7147c2436DB0")))
+            Hash.hash(Address.fromHexString("0x0000000000036414940324055C43E75f56B7d016")))
     );
   }
 
