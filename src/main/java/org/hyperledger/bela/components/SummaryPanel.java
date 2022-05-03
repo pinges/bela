@@ -2,17 +2,22 @@ package org.hyperledger.bela.components;
 
 import org.hyperledger.besu.ethereum.chain.ChainHead;
 
+import java.util.Optional;
+
 import com.googlecode.lanterna.gui2.GridLayout;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.Panel;
+import org.apache.tuweni.bytes.Bytes;
 
 public class SummaryPanel implements LanternaComponent<Panel>{
   private final String worldStateRoot;
   private final ChainHead chainHead;
+  private final Optional<Bytes> contractcode;
 
-  public SummaryPanel(final String worldStateRoot, final ChainHead chainHead) {
+  public SummaryPanel(final String worldStateRoot, final ChainHead chainHead, final Optional<Bytes> contractcode) {
     this.worldStateRoot = worldStateRoot;
     this.chainHead = chainHead;
+    this.contractcode = contractcode;
   }
 
   @Override
@@ -29,6 +34,8 @@ public class SummaryPanel implements LanternaComponent<Panel>{
     panel.addComponent(new Label("chain head hash:"));
     panel.addComponent(new Label(chainHead.getHash().toHexString()));
 
+    panel.addComponent(new Label("contract code"));
+    panel.addComponent(new Label(contractcode.map(Bytes::toHexString).orElse("")));
 
     return panel;
   }

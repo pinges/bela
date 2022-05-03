@@ -17,6 +17,8 @@
 
 package org.hyperledger.bela;
 
+import org.hyperledger.besu.datatypes.Address;
+import org.hyperledger.besu.datatypes.Hash;
 import org.hyperledger.besu.ethereum.bonsai.BonsaiWorldStateKeyValueStorage;
 import org.hyperledger.besu.ethereum.chain.Blockchain;
 import org.hyperledger.besu.ethereum.chain.DefaultBlockchain;
@@ -86,7 +88,10 @@ public class BlockChainBrowser {
   public LanternaComponent<? extends Component> showSummaryPanel() {
     return new SummaryPanel(
         worldStateStorage.getWorldStateRootHash().map(Bytes::toHexString).orElse(null),
-        blockchain.getChainHead());
+        blockchain.getChainHead(),
+        worldStateStorage.getCode(null,
+            Hash.hash(Address.fromHexString("0xEcEac5562EAF4B7C07e9E208CfaD7147c2436DB0")))
+    );
   }
 
   public void showFindBlockDialog(final WindowBasedTextGUI parentWindow, final long blockNumber) {
