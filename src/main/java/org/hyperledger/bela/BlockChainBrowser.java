@@ -67,13 +67,6 @@ public class BlockChainBrowser {
         provider.getStorageBySegmentIdentifier(KeyValueSegmentIdentifier.BLOCKCHAIN),
         new MainnetBlockHeaderFunctions());
 
-    // fixme, hack to rollback lodestar node to a point before the contract was destroyed:
-    var updater = blockchainStorage.updater();
-    updater.setChainHead(Hash.fromHexString(
-        "0x5e25db03841d93cd2cadb7f43dcc3c01dfec77ec3d44b2749791c2b7f46cbb30"));
-    updater.commit();
-
-
     var genesisBlock = blockchainStorage
         .getBlockHash(0L)
         .flatMap(blockchainStorage::getBlockHeader)
@@ -86,6 +79,13 @@ public class BlockChainBrowser {
     var worldStateStorage = new BonsaiWorldStateKeyValueStorage(provider);
     var worldStateArchive = new BonsaiWorldStateArchive(
         provider, blockchain);
+
+    // fixme, hack to rollback lodestar node to a point before the contract was destroyed:
+    var updater = blockchainStorage.updater();
+    updater.setChainHead(genesisBlock.getHash());
+    updater.commit();
+    worldStateStorage.clear();
+
     return new BlockChainBrowser(blockchain/*, worldStateArchive*/, worldStateStorage);
   }
 
